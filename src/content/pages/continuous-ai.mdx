@@ -1,0 +1,202 @@
+---
+title: "Continuous AI — GitHub Copilot"
+description: "AI that works continuously: from GitHub Agentic Workflows to CLI extensions running in CI/CD pipelines."
+navLabel: "Continuous AI"
+navOrder: 5
+heroEmoji: "♾️"
+heroSubtitle: "AI that works while you sleep"
+accentColor: "blue"
+---
+
+<nav class="quick-nav">
+  <a href="#what-is">What is Continuous AI?</a>
+  <a href="#agentic-workflows">Agentic Workflows</a>
+  <a href="#cli-in-ci">CLI in CI</a>
+  <a href="#home-assistant">Home Assistant</a>
+</nav>
+
+---
+
+<p class="section-label">Concept</p>
+<h2 class="section-title" id="what-is">What is Continuous AI?</h2>
+<p class="section-desc">Traditional CI/CD runs deterministic pipelines — the same inputs always produce the same outputs. Continuous AI adds AI agents that can <strong>understand context</strong>, <strong>make decisions</strong>, and <strong>take actions</strong>.</p>
+
+<div class="card-grid">
+  <div class="card card-accent-blue">
+    <h3>⏰ Event-Triggered</h3>
+    <p>Agents react to issues, PRs, comments, and deployments — triaging, labeling, and responding in real time.</p>
+  </div>
+
+  <div class="card card-accent-green">
+    <h3>🔄 Cron-Scheduled</h3>
+    <p>Run agents on a schedule — daily reports, weekly audits, nightly dependency checks — all without human intervention.</p>
+  </div>
+
+  <div class="card card-accent-purple">
+    <h3>🤖 Autonomous</h3>
+    <p>Agents that monitor, decide, and act continuously — with human-in-the-loop guardrails ensuring safety at every step.</p>
+  </div>
+</div>
+
+---
+
+<p class="section-label">Platform</p>
+<h2 class="section-title" id="agentic-workflows">GitHub Agentic Workflows</h2>
+<p class="section-desc">Created by <strong>Don Syme</strong> and <strong>Peli de Halleux</strong> at GitHub Next — write automation goals in Markdown, compile to GitHub Actions.</p>
+
+<div class="card-grid">
+  <div class="card card-accent-blue">
+    <h3>📝 Markdown-First</h3>
+    <p>Define your automation goals in plain Markdown with YAML frontmatter. No complex DSL — just describe what you want.</p>
+  </div>
+
+  <div class="card card-accent-green">
+    <h3>🧠 Coding Agents</h3>
+    <p>Copilot, Claude, and Codex handle triage, documentation, testing, and reporting — each with their own strengths.</p>
+  </div>
+
+  <div class="card card-accent-purple">
+    <h3>🛡️ Human-in-the-Loop</h3>
+    <p>Strong guardrails ensure agents can't go rogue. Approval gates, scope limits, and audit logs keep humans in control.</p>
+  </div>
+</div>
+
+<div class="code-block">
+  <div class="code-header">Example: Agentic Workflow Definition</div>
+
+```markdown
+---
+name: continuous-triage
+description: Automatically triage new issues
+triggers:
+  - type: issues
+    activity: [opened]
+tools:
+  - gh_api
+  - file_read
+---
+# Triage Instructions
+When a new issue is opened:
+1. Read the issue body and labels
+2. Categorize as bug/feature/question
+3. Assign priority based on keywords
+4. Add appropriate labels
+```
+
+</div>
+
+<div style="margin-top: 1.5rem; text-align: center;">
+  <a href="https://htekdev.github.io/gh-aw-overview" target="_blank" rel="noopener" class="btn btn-primary">
+    Deep Dive → Agentic Workflows Guide
+  </a>
+</div>
+
+---
+
+<p class="section-label">Integration</p>
+<h2 class="section-title" id="cli-in-ci">Copilot CLI + Extensions in CI</h2>
+<p class="section-desc">The Copilot SDK enables running CLI agents inside GitHub Actions — with the same extensions and guardrails you use locally.</p>
+
+<div class="card-grid">
+  <div class="card card-accent-blue">
+    <h3>📦 Copilot SDK</h3>
+    <p>Use <code>@github/copilot-sdk</code> to spawn Copilot sessions programmatically in any CI environment.</p>
+  </div>
+
+  <div class="card card-accent-green">
+    <h3>🔒 Portable Guardrails</h3>
+    <p>Extensions in <code>.github/extensions/</code> auto-load in CI. Your guardrails travel with your repo — same protection locally and in pipelines.</p>
+  </div>
+
+  <div class="card card-accent-purple">
+    <h3>🧩 Domain Skills</h3>
+    <p>Skills give the CI agent domain-specific knowledge — so it can triage issues, generate docs, or run audits with full project context.</p>
+  </div>
+</div>
+
+<div class="code-block">
+  <div class="code-header">Conceptual: Copilot Agent in GitHub Actions</div>
+
+```yaml
+- name: Run Copilot Agent
+  env:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  run: |
+    # Copilot CLI with extensions active
+    # Extensions in .github/extensions/ auto-load
+    # hooks.json in .github/hooks/ enforces policies
+    copilot --autopilot "Triage this issue and add labels"
+```
+
+</div>
+
+> **Key insight:** The same extensions that protect you locally also protect you in CI. Your guardrails travel with your repo.
+
+---
+
+<p class="section-label">Case Study</p>
+<h2 class="section-title" id="home-assistant">Real-World: Copilot Home Assistant</h2>
+<p class="section-desc">What happens when you push Continuous AI to its limit? You get an AI that manages an entire family's daily life.</p>
+
+<div class="card-grid">
+  <div class="card card-accent-blue">
+    <h3>🏠 17 Specialized Agents</h3>
+    <p>Meal planner, budget tracker, task manager, school coordinator, and more — each an agent with focused expertise.</p>
+  </div>
+
+  <div class="card card-accent-green">
+    <h3>🔌 16 CLI Extensions</h3>
+    <p>Telegram, Calendar, Budget, Google, and other integrations — all built as Copilot CLI extensions providing custom tools.</p>
+  </div>
+
+  <div class="card card-accent-purple">
+    <h3>⏰ 15 Cron Jobs</h3>
+    <p>Agents running on schedule — morning briefings, meal plans, budget alerts, weekly reviews — all fully automated.</p>
+  </div>
+</div>
+
+<div class="code-block">
+  <div class="code-header">Architecture: Copilot Home Assistant</div>
+
+```
+Agents (.github/agents/*.agent.md)
+  ↓ scheduled by
+Cron Jobs (cron.json)
+  ↓ using tools from
+Extensions (.github/extensions/*/extension.mjs)
+  ↓ communicating via
+Telegram Bridge Extension
+```
+
+</div>
+
+<div style="margin-top: 1.5rem; text-align: center;">
+  <a href="https://github.com/htekdev/copilot-home-assistant" target="_blank" rel="noopener" class="btn btn-primary">
+    View on GitHub → copilot-home-assistant
+  </a>
+</div>
+
+---
+
+<div class="further-reading">
+  <p class="section-label">Resources</p>
+  <h2 class="section-title">Further Reading</h2>
+  <div class="reading-grid">
+    <a class="reading-card" href="https://htekdev.github.io/gh-aw-overview" target="_blank" rel="noopener">
+      <strong>GitHub Agentic Workflows — Complete Guide</strong>
+      <span>Everything you need to know about writing, deploying, and managing agentic workflows on GitHub.</span>
+    </a>
+    <a class="reading-card" href="https://htek.dev/articles/copilot-home-assistant" target="_blank" rel="noopener">
+      <strong>I Open-Sourced the AI That Runs My Household</strong>
+      <span>17 agents, 16 extensions, 15 cron jobs — managing a family's daily life via Telegram and Copilot CLI.</span>
+    </a>
+    <a class="reading-card" href="https://htek.dev/articles/github-copilot-sdk-agents-for-every-app" target="_blank" rel="noopener">
+      <strong>The GitHub Copilot SDK: Agents for Every App</strong>
+      <span>How the Copilot SDK lets you embed AI agents in any application — from CLIs to CI pipelines.</span>
+    </a>
+    <a class="reading-card" href="https://htek.dev/articles/copilot-cli-telegram-bridge" target="_blank" rel="noopener">
+      <strong>Your AI Terminal, In Your Pocket</strong>
+      <span>Bridge Copilot CLI to Telegram and run your AI assistant from anywhere — mobile, desktop, or automation.</span>
+    </a>
+  </div>
+</div>

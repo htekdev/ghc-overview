@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://htekdev.github.io/ghc-overview/sitemap-index.xml

@@ -1,0 +1,345 @@
+---
+title: "Development Workflows — GitHub Copilot"
+description: "Mental models for effective AI-assisted development: research-plan-implement, autopilot modes, worktrees, and parallel execution."
+navLabel: "Workflows"
+navOrder: 4
+heroEmoji: "🔄"
+heroSubtitle: "How to think about AI-assisted development"
+accentColor: "orange"
+---
+
+<nav class="quick-nav">
+  <a href="#mental-model">Mental Model</a>
+  <a href="#modes">Execution Modes</a>
+  <a href="#worktrees">Worktrees</a>
+  <a href="#delegate">Cloud Offload</a>
+  <a href="#fleet">Parallel Fleet</a>
+</nav>
+
+---
+
+<section id="mental-model">
+<p class="section-label">Workflow Pattern</p>
+<h2 class="section-title">The Mental Model: Research → Plan → Implement</h2>
+<p class="section-desc">
+  This is the most important workflow pattern. It prevents the agent from jumping to implementation
+  before understanding the problem — and it's how humans should work too.
+</p>
+
+<div class="card-grid">
+  <div class="card card-accent-blue">
+    <h3>🔍 1. Research</h3>
+    <p>
+      Understand the codebase, explore files, read docs. <strong>Don't change anything.</strong>
+      Use <code>grep</code>, <code>glob</code>, and <code>view</code> to build a mental map.
+      Ask questions. Trace call paths. Read tests. The goal is to understand the problem space
+      before proposing a solution.
+    </p>
+  </div>
+
+  <div class="card card-accent-orange">
+    <h3>📋 2. Plan</h3>
+    <p>
+      Create a structured plan (<code>plan.md</code>). Break work into independent todos.
+      Identify dependencies between tasks. Flag risks and unknowns. The plan becomes a
+      contract between you and the agent — review it before execution starts.
+    </p>
+  </div>
+
+  <div class="card card-accent-green">
+    <h3>⚡ 3. Implement</h3>
+    <p>
+      Execute the plan. Update todos as each step completes. Verify each change with tests
+      and linting. If something unexpected comes up, pause and re-plan rather than
+      hacking around the obstacle.
+    </p>
+  </div>
+</div>
+
+<p style="margin-top: 32px; color: var(--color-text-muted); font-size: 15px;">
+  In Copilot CLI, this phasing is built into the tool:
+</p>
+
+<div class="card-grid" style="margin-top: 16px;">
+  <div class="card">
+    <h3><code>[[PLAN]]</code> prefix</h3>
+    <p>
+      Start any prompt with <code>[[PLAN]]</code> to force plan mode — the agent will research
+      and plan but <strong>never implement</strong> until you approve.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Plan Approval Gate</h3>
+    <p>
+      After planning, the agent pauses and presents the plan for your review.
+      You can accept, request changes, or reject. No code changes happen without your sign-off.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Todo Tracking</h3>
+    <p>
+      The agent maintains a SQLite database of todos during implementation.
+      Each todo tracks status (<code>pending</code>, <code>in_progress</code>, <code>done</code>)
+      and dependencies — so progress is always visible.
+    </p>
+  </div>
+</div>
+</section>
+
+---
+
+<section id="modes">
+<p class="section-label">Execution</p>
+<h2 class="section-title">Execution Modes</h2>
+<p class="section-desc">
+  Three modes for three levels of trust. Use hooks and extensions to make autopilot safe —
+  gates are what enable trust for autonomous execution.
+</p>
+
+<div class="card-grid">
+  <div class="card card-accent-blue">
+    <h3>🤝 Interactive</h3>
+    <p>
+      <strong>Default mode.</strong> The agent proposes each step, you approve before it executes.
+      Every tool call requires your confirmation.
+    </p>
+    <p style="margin-top: 12px;">
+      <strong>Best for:</strong> Learning, sensitive code, unfamiliar repositories,
+      high-risk changes, onboarding new team members.
+    </p>
+  </div>
+
+  <div class="card card-accent-orange">
+    <h3>🚀 Autopilot</h3>
+    <p>
+      <strong>Single-threaded autonomous execution.</strong> The agent works through the plan
+      without pausing for approval. It still follows hooks and extensions — those become your
+      safety net.
+    </p>
+    <p style="margin-top: 12px;">
+      <strong>Best for:</strong> Well-understood tasks, trusted repos with governance hooks,
+      repetitive refactors, tasks where the plan is already approved.
+    </p>
+  </div>
+
+  <div class="card card-accent-purple">
+    <h3>⚡ Autopilot Fleet</h3>
+    <p>
+      <strong>Parallel sub-agents.</strong> The orchestrator decomposes the plan into independent
+      work items and dispatches sub-agents to execute them concurrently. Each sub-agent gets
+      its own context window.
+    </p>
+    <p style="margin-top: 12px;">
+      <strong>Best for:</strong> Large refactors, multi-file changes, independent work items
+      that don't depend on each other.
+    </p>
+  </div>
+</div>
+
+<div class="card" style="margin-top: 24px; border-left: 3px solid var(--color-orange);">
+  <h3>💡 Key Insight</h3>
+  <p>
+    The progression from Interactive → Autopilot → Fleet is a progression of <strong>trust</strong>.
+    You don't need to trust the <em>model</em> — you need to trust your <em>gates</em>.
+    Well-configured hooks, extensions, and test requirements make autonomous execution safe
+    because destructive actions are blocked deterministically, not probabilistically.
+  </p>
+</div>
+</section>
+
+---
+
+<section id="worktrees">
+<p class="section-label">Parallel Development</p>
+<h2 class="section-title">Git Worktrees</h2>
+<p class="section-desc">
+  Each worktree is an independent working directory on a different branch — and each
+  can run its own Copilot CLI session. This enables true parallel development.
+</p>
+
+<div class="code-block">
+  <div class="code-header">
+    <span>bash — Create worktrees for parallel work</span>
+  </div>
+  <pre><code>{`# Create worktrees for parallel work
+git worktree add ../project-feature-auth feature/auth
+git worktree add ../project-fix-perf fix/performance
+git worktree add ../project-docs-update docs/api-reference
+
+# Each worktree gets its own Copilot CLI session
+cd ../project-feature-auth && copilot
+`}</code></pre>
+</div>
+
+<div class="card-grid" style="margin-top: 24px;">
+  <div class="card card-accent-blue">
+    <h3>🌳 Worktree A</h3>
+    <p>
+      Agent works on <strong>feature-x</strong> autonomously in autopilot mode.
+      Hooks enforce test coverage and linting.
+    </p>
+  </div>
+
+  <div class="card card-accent-green">
+    <h3>🌳 Worktree B</h3>
+    <p>
+      Agent works on <strong>fix-y</strong> in a separate session.
+      Completely isolated — different branch, different context.
+    </p>
+  </div>
+
+  <div class="card card-accent-purple">
+    <h3>🌳 Worktree C</h3>
+    <p>
+      <strong>You</strong> review and iterate on <strong>feature-z</strong> interactively.
+      The other agents keep working while you focus here.
+    </p>
+  </div>
+</div>
+
+<p style="margin-top: 24px; color: var(--color-text-muted); font-size: 15px;">
+  <strong>Perfect for:</strong> Multiple PRs in progress, comparing implementation approaches,
+  isolating experiments, letting agents work while you review.
+</p>
+</section>
+
+---
+
+<section id="delegate">
+<p class="section-label">Cloud Offload</p>
+<h2 class="section-title">/delegate — Send Tasks to the Cloud</h2>
+<p class="section-desc">
+  Offload tasks to Copilot Coding Agent running in the cloud. Your local session
+  continues while the cloud agent works — and it creates a PR when done.
+</p>
+
+<div class="code-block">
+  <div class="code-header">
+    <span>Copilot CLI — Delegate a task</span>
+  </div>
+  <pre><code>{`/delegate Add dark mode support to the settings page`}</code></pre>
+</div>
+
+<div class="card-grid" style="margin-top: 24px;">
+  <div class="card card-accent-orange">
+    <h3>☁️ Use /delegate for</h3>
+    <p>
+      Tangential tasks that don't block your current work. Documentation updates.
+      Refactoring separate modules. Boilerplate generation. Anything where you
+      don't need to be in the loop for every decision.
+    </p>
+  </div>
+
+  <div class="card card-accent-blue">
+    <h3>💻 Work locally for</h3>
+    <p>
+      Core feature work where you need tight feedback loops. Debugging sessions
+      that require interactive exploration. Architecture decisions where you want
+      to guide every step.
+    </p>
+  </div>
+</div>
+
+<div class="feature-table" style="margin-top: 24px;">
+
+| Use `/delegate` | Work locally |
+| --- | --- |
+| Tangential tasks | Core feature work |
+| Documentation updates | Debugging |
+| Refactoring separate modules | Interactive exploration |
+| Boilerplate generation | Architecture decisions |
+
+</div>
+</section>
+
+---
+
+<section id="fleet">
+<p class="section-label">Multi-Agent</p>
+<h2 class="section-title">/fleet — Parallel Multi-Agent Execution</h2>
+<p class="section-desc">
+  Launched April 2026 — the biggest architectural shift in Copilot CLI.
+  An orchestrator decomposes your task and dispatches parallel sub-agents to execute it.
+</p>
+
+<div class="code-block">
+  <div class="code-header">
+    <span>Copilot CLI — Launch a fleet</span>
+  </div>
+  <pre><code>{`/fleet Refactor the auth module, update tests, and fix the related docs`}</code></pre>
+</div>
+
+<div class="card-grid" style="margin-top: 24px;">
+  <div class="card card-accent-blue">
+    <h3>1. Analyze</h3>
+    <p>
+      The orchestrator analyzes your request, identifies independent work items,
+      and maps dependencies between them.
+    </p>
+  </div>
+
+  <div class="card card-accent-orange">
+    <h3>2. Dispatch</h3>
+    <p>
+      Independent items are dispatched in parallel waves. Each sub-agent gets its
+      own context window but shares the filesystem.
+    </p>
+  </div>
+
+  <div class="card card-accent-green">
+    <h3>3. Execute</h3>
+    <p>
+      Each sub-agent works autonomously on its assigned scope.
+      Sub-agents can't talk to each other — only the orchestrator coordinates.
+    </p>
+  </div>
+
+  <div class="card card-accent-purple">
+    <h3>4. Synthesize</h3>
+    <p>
+      The orchestrator collects results from all sub-agents, resolves any conflicts,
+      and presents the unified outcome.
+    </p>
+  </div>
+</div>
+
+<div class="code-block" style="margin-top: 24px;">
+  <div class="code-header">
+    <span>Copilot CLI — Fleet with custom agents</span>
+  </div>
+  <pre><code>{`# Reference custom agents for specialized sub-tasks
+/fleet Use @technical-writer.md for docs and default for code`}</code></pre>
+</div>
+
+<div class="card" style="margin-top: 24px; border-left: 3px solid var(--color-purple);">
+  <h3>🧠 Architecture Note</h3>
+  <p>
+    Fleet mode is not just "run things in parallel." The orchestrator understands dependency
+    graphs — it won't dispatch a test-update agent until the code-change agent completes.
+    This means you get parallelism where it's safe and sequencing where it's required.
+  </p>
+</div>
+</section>
+
+---
+
+<div class="further-reading">
+  <p class="section-label">Resources</p>
+  <h2 class="section-title">Further Reading</h2>
+  <div class="reading-grid">
+    <a class="reading-card" href="https://htek.dev/articles/copilot-cli-weekly-2026-04-03" target="_blank" rel="noopener">
+      <div class="reading-title">/fleet Ships — Parallel Multi-Agent Execution</div>
+      <div class="reading-source">htek.dev</div>
+    </a>
+    <a class="reading-card" href="https://htek.dev/articles/top-5-mistakes-creating-custom-github-copilot-agents" target="_blank" rel="noopener">
+      <div class="reading-title">Top 5 Mistakes When Creating Custom Agents</div>
+      <div class="reading-source">htek.dev</div>
+    </a>
+    <a class="reading-card" href="https://docs.github.com/copilot/how-tos/copilot-cli/cli-best-practices" target="_blank" rel="noopener">
+      <div class="reading-title">Best Practices for GitHub Copilot CLI</div>
+      <div class="reading-source">docs.github.com</div>
+    </a>
+  </div>
+</div>

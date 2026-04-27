@@ -1,0 +1,20 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getEntry } from 'astro:content';
+
+const page = await getEntry('pages', 'workflows');
+const { Content } = await page.render();
+---
+
+<BaseLayout title={page.data.title} description={page.data.description} currentPage="workflows">
+  <div class="page-hero">
+    <div class="hero-content">
+      <div class="hero-emoji">{page.data.heroEmoji}</div>
+      <h1 class="hero-title">{page.data.title.split('—')[0]}</h1>
+      <p class="hero-subtitle">{page.data.heroSubtitle}</p>
+    </div>
+  </div>
+  <div class="container">
+    <Content />
+  </div>
+</BaseLayout>

@@ -1,0 +1,215 @@
+---
+title: "Deterministic Gates — GitHub Copilot"
+description: "Hard guardrails for agent behavior: hooks that block, allow, or modify actions before they happen."
+navLabel: "Gates"
+navOrder: 2
+heroEmoji: "🚧"
+heroSubtitle: "Hard guardrails for agent behavior"
+accentColor: "purple"
+---
+
+<div class="quick-nav">
+  <a href="#hooks-json">hooks.json</a>
+  <a href="#hook-triggers">Hook Triggers</a>
+  <a href="#extension-hooks">Extension Hooks</a>
+  <a href="#permission-model">Permission Model</a>
+</div>
+
+## <span id="hooks-json">hooks.json — Shell-Based Hooks</span>
+
+**File:** `.github/hooks/hooks.json`
+**Works in:** CLI ✅ &nbsp; Coding Agent ✅ &nbsp; VS Code ❌
+
+Each hook runs a **shell script** that receives JSON on stdin and outputs JSON. No SDK required — any language that can read stdin and write stdout works.
+
+<div class="code-block">
+  <div class="code-header">
+    <span>📁 .github/hooks/hooks.json</span>
+    <span>htekdev/agent-hooks-demo</span>
+  </div>
+
+```json
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": "./scripts/hooks/session-log.sh",
+        "powershell": "./scripts/hooks/session-log.ps1",
+        "timeoutSec": 10,
+        "comment": "Log session start for audit trail"
+      }
+    ],
+    "preToolUse": [
+      {
+        "type": "command",
+        "bash": "./scripts/hooks/block-secrets.sh",
+        "powershell": "./scripts/hooks/block-secrets.ps1",
+        "timeoutSec": 10,
+        "comment": "Block create/edit of .env, .pem, .key files"
+      },
+      {
+        "type": "command",
+        "bash": "./scripts/hooks/require-tests.sh",
+        "powershell": "./scripts/hooks/require-tests.ps1",
+        "timeoutSec": 15,
+        "comment": "Require test files when committing source changes"
+      }
+    ],
+    "postToolUse": [
+      {
+        "type": "command",
+        "bash": "./scripts/hooks/validate-json.sh",
+        "powershell": "./scripts/hooks/validate-json.ps1",
+        "timeoutSec": 10,
+        "comment": "Validate JSON syntax after any .json file is edited"
+      }
+    ]
+  }
+}
+```
+</div>
+
+Each hook in the array runs **in order**. If any `preToolUse` hook returns `"deny"`, the tool call is blocked and subsequent hooks are skipped.
+
+---
+
+## <span id="hook-triggers">Hook Triggers</span>
+
+Every trigger receives a JSON payload on stdin with context about the event. Your script inspects the payload and returns a JSON decision.
+
+| Trigger | When It Fires | Use Case |
+|---|---|---|
+| `sessionStart` | Agent session begins | Audit logging, context injection |
+| `sessionEnd` | Agent session ends | Cleanup, reporting |
+| `userPromptSubmitted` | User sends a message | Prompt filtering, routing |
+| `preToolUse` | Before any tool executes | Block dangerous operations, modify args |
+| `postToolUse` | After tool executes | Validate output, inject context |
+| `errorOccurred` | Agent encounters an error | Custom error handling, retry logic |
+
+The `preToolUse` trigger is the **most powerful** — it can inspect the tool name, arguments, and file paths *before* anything happens. This is where you enforce security policy.
+
+---
+
+## <span id="extension-hooks">Extension Hooks — Programmatic JS</span>
+
+**File:** `.github/extensions/<name>/extension.mjs`
+**Works in:** CLI only
+**SDK:** `@github/copilot-sdk` (auto-resolved, no npm install needed)
+
+Extensions give you **full programmatic control** — pattern matching, state tracking across calls, and the ability to define custom tools.
+
+<div class="code-block">
+  <div class="code-header">
+    <span>📁 .github/extensions/repo-shield/extension.mjs</span>
+    <span>Block secrets + inject security context</span>
+  </div>
+
+```javascript
+import { approveAll } from "@github/copilot-sdk";
+import { joinSession } from "@github/copilot-sdk/extension";
+
+const session = await joinSession({
+  onPermissionRequest: approveAll,
+  hooks: {
+    onPreToolUse: async (input) => {
+      if (input.toolName === "edit" || input.toolName === "create") {
+        const filePath = String(input.toolArgs?.path || "");
+        if (/\.(env|pem|key)$/.test(filePath) || /secrets\//.test(filePath)) {
+          return {
+            permissionDecision: "deny",
+            permissionDecisionReason:
+              `🚫 Blocked: ${filePath} may contain secrets. Use environment variables.`,
+          };
+        }
+      }
+    },
+    onSessionStart: async () => {
+      return {
+        additionalContext:
+          "[repo-shield] Security extension active. " +
+          "Sensitive files (.env, .pem, .key, secrets/) are protected.",
+      };
+    },
+  },
+  tools: [],
+});
+```
+</div>
+
+The `onPreToolUse` hook receives the tool name and arguments, letting you make decisions based on **exactly what the agent is about to do** — not just what it said it would do.
+
+---
+
+## <span id="permission-model">Permission Model</span>
+
+Every hook returns a **permission decision** that controls whether the tool call proceeds.
+
+<div class="card-grid">
+  <div class="card card-accent-green">
+    <h3>✅ <code>"allow"</code></h3>
+    <p>Tool executes normally. The default if your hook returns nothing. Use when the operation passes all your checks.</p>
+  </div>
+
+  <div class="card card-accent-purple">
+    <h3>🚫 <code>"deny"</code></h3>
+    <p>Tool is blocked entirely. The <code>permissionDecisionReason</code> is shown to the agent, which will explain the block to the user and try an alternative approach.</p>
+  </div>
+
+  <div class="card card-accent-orange">
+    <h3>⚠️ <code>"ask"</code></h3>
+    <p>User is prompted to approve in interactive mode. In non-interactive mode (Coding Agent), this behaves like <code>"deny"</code>. Good for risky-but-sometimes-needed operations.</p>
+  </div>
+</div>
+
+### Additional Return Fields
+
+Beyond the permission decision, hooks can return extra fields to shape the agent's behavior:
+
+| Field | Effect |
+|---|---|
+| `additionalContext` | Inject text into the conversation — the agent sees it as system context |
+| `modifiedArgs` | Change the tool's arguments before execution (e.g., rewrite file paths) |
+| `suppressOutput` | Hide the tool's output from the conversation |
+
+---
+
+## Why Two Systems?
+
+<div class="card-grid">
+  <div class="card card-accent-blue">
+    <h3>🐚 hooks.json</h3>
+    <p><strong>Language-agnostic</strong> — write hooks in Bash, PowerShell, Python, or any language. Works with both CLI and Coding Agent. Simpler model but less powerful — no state tracking between calls.</p>
+  </div>
+
+  <div class="card card-accent-purple">
+    <h3>⚡ Extension Hooks</h3>
+    <p><strong>Full programmatic control</strong> — JavaScript with async/await, state tracking across calls, regex matching, and the ability to also define custom tools. CLI only, but maximum flexibility.</p>
+  </div>
+</div>
+
+**Use hooks.json** when you need guardrails that work everywhere — especially with the Coding Agent. **Use extensions** when you need sophisticated logic, cross-call state, or custom tools that only the CLI needs.
+
+---
+
+<div class="further-reading">
+
+### 📚 Further Reading
+
+<div class="reading-grid">
+  <a class="reading-card" href="https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-hooks" target="_blank" rel="noopener">
+    <div class="reading-title">Using hooks with GitHub Copilot CLI</div>
+    <div class="reading-source">docs.github.com</div>
+  </a>
+  <a class="reading-card" href="https://htek.dev/articles/copilot-cli-extensions-cookbook-examples" target="_blank" rel="noopener">
+    <div class="reading-title">Extensions Cookbook: 16 Production-Ready Examples</div>
+    <div class="reading-source">htek.dev</div>
+  </a>
+  <a class="reading-card" href="https://github.com/htekdev/agent-hooks-demo" target="_blank" rel="noopener">
+    <div class="reading-title">agent-hooks-demo — Real working hooks repo</div>
+    <div class="reading-source">github.com/htekdev</div>
+  </a>
+</div>
+
+</div>

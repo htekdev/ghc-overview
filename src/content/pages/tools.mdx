@@ -1,0 +1,357 @@
+---
+title: "Tools & Extensions — GitHub Copilot"
+description: "Extend Copilot's capabilities: MCP servers for external tools, CLI Extensions for full programmatic control, and plugins for bundled distribution."
+navLabel: "Tools & Extensions"
+navOrder: 3
+heroEmoji: "🔧"
+heroSubtitle: "Extend what Copilot can do"
+accentColor: "green"
+---
+
+<div class="quick-nav">
+  <a href="#mcp">MCP Servers</a>
+  <a href="#extensions">CLI Extensions ⭐</a>
+  <a href="#extension-anatomy">Extension Anatomy</a>
+  <a href="#unifier">The Unifier</a>
+  <a href="#plugins">Plugins</a>
+</div>
+
+---
+
+<section id="mcp">
+
+## MCP Servers — External Tool Providers
+
+The **Model Context Protocol** lets Copilot call external tools over JSON-RPC. Think of MCP servers as "plugins for the model" — they expose functions (search, query, deploy) that the agent can invoke on demand.
+
+<div class="card-grid">
+  <div class="card card-accent-blue">
+    <h3>🔌 Where It Works</h3>
+    <p>CLI ✅ &nbsp; VS Code ✅ &nbsp; Coding Agent ✅</p>
+    <p>MCP is the most broadly supported extensibility mechanism — every Copilot surface speaks it.</p>
+  </div>
+  <div class="card card-accent-blue">
+    <h3>⚙️ Configuration</h3>
+    <p><code>.mcp.json</code> at repo root (shared with team) or <code>.vscode/mcp.json</code> (personal). Both are auto-discovered.</p>
+  </div>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span>.mcp.json</span><span>Repo root</span></div>
+
+```json
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": { "GITHUB_TOKEN": "" }
+    }
+  }
+}
+```
+
+</div>
+
+> **💡 MCP is important, but it's not the star of this talk.** It gives the agent new tools — but it can't inject context or block dangerous actions. For that, you need extensions.
+
+</section>
+
+---
+
+<section id="extensions">
+
+## CLI Extensions — The Star ⭐
+
+Extensions are the most powerful customization point in Copilot CLI. A single `.mjs` file can inject context, block dangerous operations, **and** register new tools — no other mechanism does all three.
+
+<div class="card-grid">
+  <div class="card card-accent-green">
+    <h3>📁 File Location</h3>
+    <p><code>.github/extensions/&lt;name&gt;/extension.mjs</code></p>
+    <p>Project-level (repo) or <code>~/.copilot/extensions/</code> (user-global).</p>
+  </div>
+  <div class="card card-accent-green">
+    <h3>📦 Zero Install</h3>
+    <p><code>@github/copilot-sdk</code> is auto-resolved by the CLI runtime. No <code>npm install</code>, no <code>package.json</code>, no dependency management.</p>
+  </div>
+  <div class="card card-accent-green">
+    <h3>🔄 Hot Reload</h3>
+    <p>Run <code>extensions_reload</code> or <code>/clear</code> mid-session. Changes activate instantly — no restart needed.</p>
+  </div>
+  <div class="card card-accent-green">
+    <h3>🧩 Runtime Model</h3>
+    <p>Each extension runs as a separate Node.js child process, communicating with the CLI over JSON-RPC. Isolated, sandboxed, safe.</p>
+  </div>
+</div>
+
+### Extension Lifecycle
+
+<div class="card card-accent-purple" style="margin-top: 20px;">
+  <h3>🔄 How Extensions Boot</h3>
+
+1. **Scan** — CLI scans `.github/extensions/*/extension.mjs` at startup
+2. **Fork** — Each extension is spawned as a child Node.js process
+3. **Connect** — Extension calls `joinSession()` → establishes JSON-RPC link with CLI
+4. **Register** — Tools and hooks are immediately available to the agent
+5. **Reload** — `/clear` or `extensions_reload` restarts all extensions
+6. **Shutdown** — Extensions are stopped when CLI exits
+
+</div>
+
+</section>
+
+---
+
+<section id="extension-anatomy">
+
+## Extension Anatomy — Three Pillars in One File
+
+This is the key pattern. A single `extension.mjs` can provide **context injection**, **deterministic gates**, and **custom tools** — the three pillars of agent governance.
+
+<div class="code-block">
+  <div class="code-header"><span>.github/extensions/db-guardian/extension.mjs</span><span>Complete multi-feature extension</span></div>
+
+```javascript
+import { approveAll } from "@github/copilot-sdk";
+import { joinSession } from "@github/copilot-sdk/extension";
+
+const session = await joinSession({
+  onPermissionRequest: approveAll,
+
+  // ╔══════════════════════════════════════════════════════╗
+  // ║  PILLAR 1: Context Injection                        ║
+  // ╚══════════════════════════════════════════════════════╝
+  hooks: {
+    onSessionStart: async () => ({
+      additionalContext:
+        "[db-guardian] This project uses PostgreSQL. " +
+        "Always use parameterized queries. " +
+        "Never use string concatenation for SQL.",
+    }),
+
+    // ╔══════════════════════════════════════════════════════╗
+    // ║  PILLAR 2: Deterministic Gates                      ║
+    // ╚══════════════════════════════════════════════════════╝
+    onPreToolUse: async (input) => {
+      if (input.toolName === "powershell") {
+        const cmd = String(input.toolArgs?.command || "");
+        if (/DROP\s+(DATABASE|TABLE)/i.test(cmd)) {
+          return {
+            permissionDecision: "deny",
+            permissionDecisionReason:
+              "🚫 Destructive DB operation blocked by db-guardian.",
+          };
+        }
+      }
+    },
+
+    // Advisory feedback after edits
+    onPostToolUse: async (input) => {
+      if (input.toolName === "edit") {
+        const content = String(input.toolArgs?.new_str || "");
+        if (/\$\{.*\}.*SELECT|INSERT|UPDATE|DELETE/i.test(content)) {
+          return {
+            additionalContext:
+              "[db-guardian] ⚠️ Possible SQL injection detected. " +
+              "Use parameterized queries instead of template literals.",
+          };
+        }
+      }
+    },
+  },
+
+  // ╔══════════════════════════════════════════════════════╗
+  // ║  PILLAR 3: Custom Tools                             ║
+  // ╚══════════════════════════════════════════════════════╝
+  tools: [
+    {
+      name: "check_db_health",
+      description:
+        "Check PostgreSQL database health and connection status",
+      parameters: {
+        type: "object",
+        properties: {
+          database: {
+            type: "string",
+            description: "Database name to check",
+          },
+        },
+        required: ["database"],
+      },
+      handler: async (args) => {
+        // Real implementation would query pg_stat_activity
+        return {
+          status: "healthy",
+          connections: 12,
+          maxConnections: 100,
+          uptime: "14d 6h 32m",
+        };
+      },
+    },
+  ],
+});
+```
+
+</div>
+
+<div class="card card-accent-green" style="text-align: center; margin-top: 24px;">
+  <h3>💡 One file. Three pillars. Context + Gates + Tools.</h3>
+  <p>No other Copilot extensibility mechanism provides all three in a single, zero-dependency file.</p>
+</div>
+
+</section>
+
+---
+
+<section id="unifier">
+
+## The Unifier — Why Extensions Win
+
+Other mechanisms do one thing. Extensions do everything. That's why they're the most important feature in the Copilot CLI.
+
+<div class="card-grid">
+  <div class="card card-accent-blue">
+    <h3>📖 Context</h3>
+    <p><code>onSessionStart</code> → Inject project knowledge, conventions, and constraints at the start of every session.</p>
+    <p style="margin-top: 8px; font-size: 13px; color: var(--color-text-subtle);">The agent knows your rules before it writes a single line of code.</p>
+  </div>
+  <div class="card card-accent-purple">
+    <h3>🛡️ Gates</h3>
+    <p><code>onPreToolUse</code> → Block dangerous operations deterministically. No prompt injection can bypass a <code>permissionDecision: "deny"</code>.</p>
+    <p style="margin-top: 8px; font-size: 13px; color: var(--color-text-subtle);">Hard stops that the model cannot talk its way around.</p>
+  </div>
+  <div class="card card-accent-green">
+    <h3>🔧 Tools</h3>
+    <p><code>tools[]</code> → Give the agent entirely new capabilities — query databases, call APIs, run health checks, anything.</p>
+    <p style="margin-top: 8px; font-size: 13px; color: var(--color-text-subtle);">Expand the agent's action space with domain-specific operations.</p>
+  </div>
+</div>
+
+<table class="feature-table" style="margin-top: 32px;">
+  <thead>
+    <tr>
+      <th>Mechanism</th>
+      <th>Context</th>
+      <th>Gates</th>
+      <th>Tools</th>
+      <th>Zero Install</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>copilot-instructions.md</code></td>
+      <td>✅</td>
+      <td>❌</td>
+      <td>❌</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>MCP Servers</td>
+      <td>❌</td>
+      <td>❌</td>
+      <td>✅</td>
+      <td>❌</td>
+    </tr>
+    <tr>
+      <td>Custom Agents</td>
+      <td>✅</td>
+      <td>❌</td>
+      <td>❌</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td><strong>CLI Extensions</strong></td>
+      <td><strong>✅</strong></td>
+      <td><strong>✅</strong></td>
+      <td><strong>✅</strong></td>
+      <td><strong>✅</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+> **Extensions are the only mechanism that spans all three pillars with zero dependency management.** This is the unifier — one file to rule them all.
+
+</section>
+
+---
+
+<section id="plugins">
+
+## Plugins — Bundle Everything for Distribution
+
+Plugins package agents, skills, hooks, and MCP configs into a single installable unit. Think of them as the distribution format — when you want to share a complete Copilot customization with your team or the world.
+
+<div class="code-block">
+  <div class="code-header"><span>Plugin directory structure</span><span>my-plugin/</span></div>
+
+```
+my-plugin/
+├── plugin.json           # Required manifest — name, version, description
+├── agents/               # Custom agent definitions
+│   └── helper.agent.md
+├── skills/               # Bundled skills
+│   └── deploy/
+│       └── SKILL.md
+├── hooks.json            # Hook configuration
+└── .mcp.json             # MCP server definitions
+```
+
+</div>
+
+<div class="card-grid" style="margin-top: 20px;">
+  <div class="card card-accent-purple">
+    <h3>📦 What's Inside</h3>
+    <p>A plugin can bundle any combination: agents, skills, hooks, and MCP server configs. The <code>plugin.json</code> manifest ties them together.</p>
+  </div>
+  <div class="card card-accent-purple">
+    <h3>⚡ Install & Go</h3>
+    <p>Install with <code>/plugin install &lt;name&gt;</code> in any Copilot CLI session. Everything activates immediately.</p>
+  </div>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span>plugin.json</span><span>Required manifest</span></div>
+
+```json
+{
+  "name": "my-plugin",
+  "version": "1.0.0",
+  "description": "Production deployment toolkit",
+  "agents": ["agents/helper.agent.md"],
+  "skills": ["skills/deploy"],
+  "hooks": "hooks.json",
+  "mcp": ".mcp.json"
+}
+```
+
+</div>
+
+</section>
+
+---
+
+<div class="further-reading">
+
+### 📚 Further Reading
+
+<div class="reading-grid">
+  <a href="https://htek.dev/articles/github-copilot-cli-extensions-complete-guide" class="reading-card" target="_blank" rel="noopener">
+    <div class="reading-title">CLI Extensions: The Most Powerful Feature Nobody's Talking About</div>
+    <div class="reading-source">htek.dev — Complete guide to building extensions</div>
+  </a>
+  <a href="https://htek.dev/articles/copilot-cli-extensions-cookbook-examples" class="reading-card" target="_blank" rel="noopener">
+    <div class="reading-title">Extensions Cookbook: 16 Production-Ready Examples</div>
+    <div class="reading-source">htek.dev — Real-world extension patterns</div>
+  </a>
+  <a href="https://htek.dev/articles/copilot-cli-telegram-bridge" class="reading-card" target="_blank" rel="noopener">
+    <div class="reading-title">Your AI Terminal, In Your Pocket: Telegram Bridge</div>
+    <div class="reading-source">htek.dev — Remote CLI access via Telegram</div>
+  </a>
+  <a href="https://github.com/htekdev/copilot-home-assistant" class="reading-card" target="_blank" rel="noopener">
+    <div class="reading-title">I Open-Sourced the AI That Runs My Household</div>
+    <div class="reading-source">github.com — 17 agents, 16 extensions</div>
+  </a>
+</div>
+
+</div>

@@ -1,0 +1,131 @@
+---
+title: "Configuring GitHub Copilot — The Three Pillars"
+description: "The complete guide to configuring GitHub Copilot — context management, deterministic gates, tools, and development workflows for maximum adoption."
+navLabel: "Home"
+navOrder: 0
+heroEmoji: "🤖"
+heroSubtitle: "Context · Gates · Tools"
+accentColor: "green"
+---
+
+<div class="hero">
+  <h1>Configuring GitHub Copilot</h1>
+  <h2>The Three Pillars</h2>
+  <p>
+    Copilot is configurable at <strong>every level</strong> — from the instructions that shape its knowledge,
+    to the gates that enforce your standards, to the tools that extend what it can do.
+    This deck walks through each layer so your team ships with confidence.
+  </p>
+  <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+    <a href="context/" class="btn btn-primary">Get Started →</a>
+    <a href="tools/" class="btn btn-secondary">Extensions Deep-Dive →</a>
+  </div>
+</div>
+
+---
+
+<p class="section-label">Overview</p>
+<h2 class="section-title">The Three Pillars</h2>
+<p class="section-desc">Every configuration lever falls into one of three categories.</p>
+
+<div class="card-grid">
+  <div class="card card-accent-blue">
+    <h3>📋 Context Management</h3>
+    <p>
+      <strong>Shape what Copilot knows.</strong> Instructions files, path-based rules,
+      and skills give the agent the right context at the right time — so it writes code
+      that fits <em>your</em> codebase, not a generic tutorial.
+    </p>
+  </div>
+
+  <div class="card card-accent-purple">
+    <h3>🚧 Deterministic Gates</h3>
+    <p>
+      <strong>Hard guardrails that can't be prompt-hacked.</strong> Hooks intercept every
+      tool call and can block, allow, or modify agent actions — enforcing security, testing,
+      and compliance before code ever lands.
+    </p>
+  </div>
+
+  <div class="card card-accent-green">
+    <h3>🔧 Tools &amp; Extensions</h3>
+    <p>
+      <strong>Extend what Copilot can do.</strong> MCP servers bring external data in;
+      CLI extensions add custom tools and governance hooks. Extensions are the unifier —
+      they can do context, gates, <em>and</em> tools in one package.
+    </p>
+  </div>
+</div>
+
+---
+
+<p class="section-label">Compatibility</p>
+<h2 class="section-title">Feature Matrix — What Works Where</h2>
+<p class="section-desc">Not every surface supports every feature. Plan accordingly.</p>
+
+<div class="feature-table">
+
+| Feature | CLI | VS Code | Coding Agent |
+| --- | --- | --- | --- |
+| `copilot-instructions.md` | ✅ | ✅ | ✅ |
+| Path-based `.instructions.md` | ✅ | ✅ | ✅ |
+| Skills (`.github/skills/`) | ✅ | ❌ | ✅ |
+| `hooks.json` (`.github/hooks/`) | ✅ | ❌ | ✅ |
+| CLI Extensions (`.github/extensions/`) | ✅ | ❌ | ❌ |
+| MCP Servers | ✅ | ✅ | ✅ |
+| Plugins | ✅ | ❌ | ❌ |
+
+</div>
+
+---
+
+<p class="section-label">Motivation</p>
+<h2 class="section-title">Why Configure?</h2>
+<p class="section-desc">Out-of-the-box Copilot is good. Configured Copilot is transformational.</p>
+
+<div class="card-grid">
+  <div class="card">
+    <h3>🎯 Adoption at Scale</h3>
+    <p>
+      Teams that configure instructions and gates see higher trust and faster adoption —
+      because the agent already knows the team's patterns on day one.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>🔒 Governance Without Friction</h3>
+    <p>
+      Hooks enforce security scanning, test coverage, and code standards automatically —
+      no manual review bottleneck, no "the agent forgot to run tests."
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>⚡ Compounding Returns</h3>
+    <p>
+      Every instruction, extension, and skill you add compounds across every developer
+      on the team. One hour of configuration saves hundreds of hours of correction.
+    </p>
+  </div>
+</div>
+
+---
+
+<div class="further-reading">
+  <p class="section-label">Resources</p>
+  <h2 class="section-title">Further Reading</h2>
+  <div class="reading-grid">
+    <a class="reading-card" href="https://htek.dev/articles/github-copilot-vs-the-world" target="_blank" rel="noopener">
+      <strong>GitHub Copilot vs. The World</strong>
+      <span>How Copilot stacks up against other AI coding assistants — and why configuration is the differentiator.</span>
+    </a>
+    <a class="reading-card" href="https://htek.dev/articles/copilot-cli-weekly-2026-02-27" target="_blank" rel="noopener">
+      <strong>Copilot CLI: GA Has Landed</strong>
+      <span>The CLI is now generally available. Here's what shipped, what changed, and what it means for your workflow.</span>
+    </a>
+    <a class="reading-card" href="https://htek.dev/articles/copilot-home-assistant" target="_blank" rel="noopener">
+      <strong>I Open-Sourced the AI That Runs My Household</strong>
+      <span>17 agents, 16 extensions managing a family via Telegram — a real-world stress test of Copilot's extensibility.</span>
+    </a>
+  </div>
+</div>

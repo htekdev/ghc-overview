@@ -1,0 +1,184 @@
+---
+title: "Magnifiers — GitHub Copilot"
+description: "Features that magnify your Copilot adoption: Memory, CLI Remote, and Coding Agent — all requiring GitHub."
+navLabel: "Magnifiers"
+navOrder: 6
+heroEmoji: "🔮"
+heroSubtitle: "Features that multiply your investment"
+accentColor: "purple"
+---
+
+<div class="quick-nav">
+  <a href="#memory">Memory</a>
+  <a href="#cli-remote">CLI Remote</a>
+  <a href="#coding-agent">Coding Agent</a>
+  <a href="#common-thread">Common Thread</a>
+</div>
+
+---
+
+<p class="section-label">Magnifier</p>
+<h2 class="section-title" id="memory">🧠 Copilot Memory</h2>
+<p class="section-desc">Copilot learns about your codebase automatically — stored per-repository, used by Coding Agent, Code Review, and CLI.</p>
+
+Memories are created during agent sessions when Copilot discovers coding patterns, architecture decisions, and project conventions.
+They auto-delete after **28 days** to prevent stale information from polluting future sessions.
+Before applying a memory, Copilot validates that the referenced code still exists — stale memories are silently skipped.
+
+<div class="card-grid">
+  <div class="card card-accent-purple">
+    <h3>🧠 Auto-Learns</h3>
+    <p>Memories are created from agent sessions — coding patterns, architecture decisions, and team conventions are captured automatically.</p>
+  </div>
+
+  <div class="card card-accent-blue">
+    <h3>🔒 Private to the Repo</h3>
+    <p>Memories are scoped to a single repository. They never leak across repos or organizations.</p>
+  </div>
+
+  <div class="card card-accent-orange">
+    <h3>⏰ 28-Day TTL</h3>
+    <p>Memories auto-expire after 28 days. No manual cleanup needed — stale context is purged automatically.</p>
+  </div>
+
+  <div class="card card-accent-green">
+    <h3>✅ Validated Before Use</h3>
+    <p>Copilot checks that referenced code still exists before applying a memory. Outdated memories are skipped silently.</p>
+  </div>
+
+  <div class="card card-accent-purple">
+    <h3>👁️ Auditable</h3>
+    <p>Repository owners can view and delete memories at any time through repository settings.</p>
+  </div>
+</div>
+
+**Enable Memory:**
+
+<div class="code-block">
+  <div class="code-header">Repository Settings</div>
+
+```
+Repository Settings → Code & Automation → Copilot → Memory → Enable
+```
+
+</div>
+
+You can view and delete individual memories from the same settings page.
+
+---
+
+<p class="section-label">Magnifier</p>
+<h2 class="section-title" id="cli-remote">📡 CLI Remote</h2>
+<p class="section-desc">Stream your local CLI session to GitHub web or mobile — steer it from any device. (Public Preview, April 2026)</p>
+
+CLI Remote lets you start a Copilot CLI session on your workstation and then pick it up from **any device** — phone, tablet, or another computer — via the GitHub web interface or mobile app.
+
+The session stays **private** (only visible to you) and commands continue executing **locally** on your original machine. You're just streaming the interaction, not moving the compute.
+
+**Requires:** The "Remote Control" policy must be enabled by your org admin.
+
+<div class="card-grid">
+  <div class="card card-accent-blue">
+    <h3>🏃 Start at Your Desk, Continue on the Go</h3>
+    <p>Kick off a long-running task at your workstation, then monitor and steer it from your phone while you grab coffee.</p>
+  </div>
+
+  <div class="card card-accent-green">
+    <h3>👥 Pair Programming</h3>
+    <p>Share your CLI session with a colleague for real-time collaboration — they see what you see and can steer the agent.</p>
+  </div>
+
+  <div class="card card-accent-purple">
+    <h3>📱 Review on Mobile</h3>
+    <p>Review Copilot's agent work on your phone while commuting. Approve, redirect, or cancel — all from the GitHub mobile app.</p>
+  </div>
+</div>
+
+---
+
+<p class="section-label">Magnifier</p>
+<h2 class="section-title" id="coding-agent">🤖 Coding Agent</h2>
+<p class="section-desc">Assign a GitHub Issue to Copilot — it creates a PR. Available for Copilot Enterprise and Pro+ plans.</p>
+
+The Coding Agent spins up a **secure GitHub Actions VM**, clones your repo, analyzes the codebase using RAG and code search, then pushes commits to a **draft PR** and requests your review. Iterate by mentioning `@copilot` in PR comments.
+
+**Workflow:**
+
+<div class="card-grid">
+  <div class="card card-accent-blue">
+    <h3>1️⃣ Create Issue</h3>
+    <p>Write a clear issue description with acceptance criteria. The more context, the better the result.</p>
+  </div>
+
+  <div class="card card-accent-blue">
+    <h3>2️⃣ Assign to Copilot</h3>
+    <p>Assign the issue to Copilot via the UI, Copilot Chat, or CLI. You can also use <code>/delegate</code> from the CLI.</p>
+  </div>
+
+  <div class="card card-accent-purple">
+    <h3>3️⃣ Copilot Works</h3>
+    <p>Copilot adds a 👀 reaction, spins up a VM, clones the repo, and starts implementing. A draft PR appears with commits.</p>
+  </div>
+
+  <div class="card card-accent-green">
+    <h3>4️⃣ Review &amp; Iterate</h3>
+    <p>Review the PR. Need changes? Comment <code>@copilot please also add tests</code> and it continues iterating.</p>
+  </div>
+
+  <div class="card card-accent-green">
+    <h3>5️⃣ Merge</h3>
+    <p>When you're satisfied, merge the PR. The Coding Agent respects your branch protection rules and required checks.</p>
+  </div>
+</div>
+
+<div class="code-block">
+  <div class="code-header">CLI — Delegate to Coding Agent</div>
+
+```bash
+# From the Copilot CLI, delegate a task to the Coding Agent
+/delegate
+```
+
+</div>
+
+---
+
+<p class="section-label">Platform</p>
+<h2 class="section-title" id="common-thread">🔗 The Common Thread</h2>
+<p class="section-desc">All three magnifiers share one requirement: <strong>your repo must be on GitHub.</strong></p>
+
+<div class="card card-accent-purple" style="max-width: 48rem; margin: 2rem auto; padding: 2rem;">
+  <h3>🏠 The GitHub Platform Advantage</h3>
+  <p>These features don't exist in VS Code alone or in alternative AI coding tools. They require the GitHub platform — and that's the multiplier.</p>
+  <ul style="margin-top: 1rem; line-height: 2;">
+    <li><strong>Memory</strong> → learns from GitHub-hosted sessions</li>
+    <li><strong>CLI Remote</strong> → streams to GitHub's infrastructure</li>
+    <li><strong>Coding Agent</strong> → runs in GitHub Actions</li>
+  </ul>
+  <p style="margin-top: 1rem;">This is why "repo on GitHub" isn't just a hosting choice — it's the unlock for Copilot's most powerful features.</p>
+</div>
+
+---
+
+<div class="further-reading">
+  <p class="section-label">Resources</p>
+  <h2 class="section-title">Further Reading</h2>
+  <div class="reading-grid">
+    <a class="reading-card" href="https://docs.github.com/en/copilot/how-tos/use-copilot-agents/copilot-memory" target="_blank" rel="noopener">
+      <strong>Managing Copilot Memory</strong>
+      <span>Official docs on enabling, viewing, and managing Copilot's per-repository memory system.</span>
+    </a>
+    <a class="reading-card" href="https://docs.github.com/en/copilot/concepts/coding-agent/coding-agent" target="_blank" rel="noopener">
+      <strong>About Copilot Cloud Agent</strong>
+      <span>How the Coding Agent works — from issue assignment to PR creation and iterative review.</span>
+    </a>
+    <a class="reading-card" href="https://github.blog/changelog/2026-04-13-remote-control-cli-sessions-on-web-and-mobile-in-public-preview/" target="_blank" rel="noopener">
+      <strong>CLI Remote Sessions</strong>
+      <span>Changelog announcement for streaming CLI sessions to GitHub web and mobile — public preview details.</span>
+    </a>
+    <a class="reading-card" href="https://htek.dev/articles/github-copilot-sdk-agents-for-every-app" target="_blank" rel="noopener">
+      <strong>The Copilot SDK: Agents for Every App</strong>
+      <span>Deep dive into the Copilot SDK and how it enables agent experiences beyond the editor.</span>
+    </a>
+  </div>
+</div>
