@@ -23,8 +23,6 @@ accentColor: "blue"
 
 **File:** `.github/copilot-instructions.md`
 
-**Works in:** CLI ✅ &nbsp; VS Code ✅ &nbsp; Coding Agent ✅
-
 **Format:** Plain Markdown — use headings and subheadings to organize standards.
 
 This file is **auto-attached to every Copilot interaction** in the repository. Think of it as the project's constitution — every prompt, completion, and agent session reads it.
@@ -61,8 +59,6 @@ This file is **auto-attached to every Copilot interaction** in the repository. T
 **Directory:** `.github/instructions/`
 
 **Files:** `*.instructions.md` with YAML `applyTo` frontmatter
-
-**Works in:** CLI ✅ &nbsp; VS Code ✅ &nbsp; Coding Agent ✅
 
 Path-based instruction files fire **only when Copilot touches files matching the glob pattern**. They layer on top of the global instructions, so you can give language-specific or domain-specific guidance without cluttering the root file.
 
@@ -141,8 +137,6 @@ Use pytest for testing.
 **Project skills:** `.github/skills/<skill-name>/SKILL.md`
 
 **Personal skills:** `~/.copilot/skills/<skill-name>/SKILL.md`
-
-**Works in:** CLI ✅ &nbsp; VS Code ❌ &nbsp; Coding Agent ✅
 
 When Copilot invokes a skill, the **entire `SKILL.md` plus any supplementary files** in the skill directory are injected into context. You can include scripts, examples, and templates alongside the manifest.
 

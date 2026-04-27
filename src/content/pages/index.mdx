@@ -59,22 +59,23 @@ accentColor: "green"
 
 ---
 
-<p class="section-label">Compatibility</p>
-<h2 class="section-title">Feature Matrix — What Works Where</h2>
-<p class="section-desc">Not every surface supports every feature. Plan accordingly.</p>
+<p class="section-label">Configuration Surface</p>
+<h2 class="section-title">Everything Lives in Your Repo</h2>
+<p class="section-desc">All configuration is file-based and version-controlled. Here's what you can configure:</p>
 
-<div class="feature-table">
-
-| Feature | CLI | VS Code | Coding Agent |
-| --- | --- | --- | --- |
-| `copilot-instructions.md` | ✅ | ✅ | ✅ |
-| Path-based `.instructions.md` | ✅ | ✅ | ✅ |
-| Skills (`.github/skills/`) | ✅ | ❌ | ✅ |
-| `hooks.json` (`.github/hooks/`) | ✅ | ❌ | ✅ |
-| CLI Extensions (`.github/extensions/`) | ✅ | ❌ | ❌ |
-| MCP Servers | ✅ | ✅ | ✅ |
-| Plugins | ✅ | ❌ | ❌ |
-
+<div class="card-grid">
+  <div class="card card-accent-blue">
+    <h3>📄 Instructions</h3>
+    <p><code>.github/copilot-instructions.md</code> — repo-wide<br/><code>.github/instructions/</code> — path-scoped</p>
+  </div>
+  <div class="card card-accent-purple">
+    <h3>🚧 Hooks &amp; Gates</h3>
+    <p><code>.github/hooks/hooks.json</code> — shell-based<br/><code>.github/extensions/</code> — programmatic JS</p>
+  </div>
+  <div class="card card-accent-green">
+    <h3>🔧 Tools &amp; Skills</h3>
+    <p><code>.mcp.json</code> — MCP servers<br/><code>.github/skills/</code> — agent skills<br/><code>.github/extensions/</code> — custom tools</p>
+  </div>
 </div>
 
 ---

@@ -18,7 +18,6 @@ accentColor: "purple"
 ## <span id="hooks-json">hooks.json — Shell-Based Hooks</span>
 
 **File:** `.github/hooks/hooks.json`
-**Works in:** CLI ✅ &nbsp; Coding Agent ✅ &nbsp; VS Code ❌
 
 Each hook runs a **shell script** that receives JSON on stdin and outputs JSON. No SDK required — any language that can read stdin and write stdout works.
 
@@ -95,7 +94,6 @@ The `preToolUse` trigger is the **most powerful** — it can inspect the tool na
 ## <span id="extension-hooks">Extension Hooks — Programmatic JS</span>
 
 **File:** `.github/extensions/<name>/extension.mjs`
-**Works in:** CLI only
 **SDK:** `@github/copilot-sdk` (auto-resolved, no npm install needed)
 
 Extensions give you **full programmatic control** — pattern matching, state tracking across calls, and the ability to define custom tools.
